@@ -1,5 +1,5 @@
-mod db;
-mod schema;
+pub mod db;
+pub mod schema;
 
 #[cfg(test)]
 mod tests {
