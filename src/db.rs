@@ -2,6 +2,7 @@ use lmdb;
 use lmdb::{Cursor, Transaction};
 use std::path::Path;
 
+use protobuf;
 use crate::schema;
 
 #[derive(Debug)]
@@ -34,18 +35,14 @@ pub fn ensure_dir(dir: &str) -> Result<(), std::io::Error> {
     std::fs::create_dir_all(dir)
 }
 
-pub fn name_value(value: &serde_json::Value) -> (String, &serde_json::Map<String, serde_json::Value>) {
-    let jobj = value.as_object().unwrap();
-    let name = jobj.keys().next().unwrap().to_owned();
-    let v = jobj.get(&name).unwrap().as_object().unwrap();
-    (name, v)
+pub fn name_value<T: protobuf::MessageFull>() -> String {
+    T::descriptor().name().to_string()
 }
 
-pub fn id_value(value: &serde_json::Value) -> String {
-    let jobj = value.as_object().unwrap();
-    let name = jobj.keys().next().unwrap().to_owned();
-    let v = jobj.get(&name).unwrap().as_object().unwrap();
-    v.get("id").unwrap().to_string()
+pub fn id_value<T: protobuf::MessageFull>(value: &T) -> String {
+    let desc = T::descriptor();
+    let answer = desc.fields().find(|field| field.name() == "id").unwrap();
+    answer.get_singular(value).unwrap().to_str().unwrap().to_string()
 }
 
 impl Db {
@@ -53,8 +50,9 @@ impl Db {
         format!("{}/{}", self.file_path, id)
     }
 
-    pub fn write(&self, value: &serde_json::Value) -> String {
-        let (noun_name, noun_value) = name_value(&value);
+    pub fn write<T: protobuf::MessageFull> (&self, value: &T) -> String {
+        let noun_name = name_value::<T>();
+        let id = id_value(value);
         let schema = self.schemas.get(&noun_name);
         if let Some(sch) = schema {
             for index in sch.indexes.iter() {
@@ -64,7 +62,7 @@ impl Db {
                     .create_db(Some(&idx_db_name), lmdb::DatabaseFlags::empty())
                     .unwrap();
                 let mut tx = self.env.begin_rw_txn().unwrap();
-                let key = index.get_key(&noun_value);
+                let key = index.get_key(value);
                 let result = tx.get(index_db, &key);
                 match result {
                     Err(_) => match noun_name.as_str() {
@@ -73,9 +71,9 @@ impl Db {
                                 "writing {} key:{} value: {}",
                                 idx_db_name,
                                 String::from_utf8_lossy(&key),
-                                id_value(&value)
+                                id
                             );
-                            tx.put(index_db, &key, &id_value(&value), lmdb::WriteFlags::empty())
+                            tx.put(index_db, &key, &id, lmdb::WriteFlags::empty())
                                 .unwrap()
                         }
                         _ => ()
@@ -91,7 +89,7 @@ impl Db {
                 self.dump(&idx_db_name);
             }
         }
-        noun_value.get("id").unwrap().as_str().unwrap().to_string()
+        id
     }
 
     pub fn dump(&self, name: &str) {

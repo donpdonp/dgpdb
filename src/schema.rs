@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
@@ -39,11 +38,11 @@ pub struct Index {
 }
 
 impl Index {
-    pub fn get_key(&self, value: &serde_json::Map<String, Value>) -> Vec<u8> {
+    pub fn get_key<T: protobuf::MessageFull>(&self, value: &T) -> Vec<u8> {
         let mut key = String::new();
         for field in &self.fields {
-            if let Some(fv) = value.get(field) {
-                key.push_str(fv.as_str().unwrap())
+            if let Some(fv) = Some("field") {
+                key.push_str(fv)
             } else {
                 println!("warning: field {} is missing from {}", field, self.name)
             }
