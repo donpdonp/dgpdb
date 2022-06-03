@@ -39,6 +39,7 @@ pub struct Index {
 
 impl Index {
     pub fn get_key<T: protobuf::MessageFull>(&self, value: &T) -> Vec<u8> {
+        // todo: key seperator
         let mut key = String::new();
         for field in &self.fields {
             if let Some(fv) = Some("field") {

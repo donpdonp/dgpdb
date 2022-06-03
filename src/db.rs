@@ -2,8 +2,8 @@ use lmdb;
 use lmdb::{Cursor, Transaction};
 use std::path::Path;
 
-use protobuf;
 use crate::schema;
+use protobuf;
 
 #[derive(Debug)]
 pub struct Db {
@@ -42,7 +42,12 @@ pub fn name_value<T: protobuf::MessageFull>() -> String {
 pub fn id_value<T: protobuf::MessageFull>(value: &T) -> String {
     let desc = T::descriptor();
     let answer = desc.fields().find(|field| field.name() == "id").unwrap();
-    answer.get_singular(value).unwrap().to_str().unwrap().to_string()
+    answer
+        .get_singular(value)
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_string()
 }
 
 impl Db {
@@ -50,17 +55,20 @@ impl Db {
         format!("{}/{}", self.file_path, id)
     }
 
-    pub fn write<T: protobuf::MessageFull> (&self, value: &T) -> String {
+    fn open_db(&self, idx_db_name: &str) -> lmdb::Database {
+        self.env
+            .create_db(Some(&idx_db_name), lmdb::DatabaseFlags::empty())
+            .unwrap()
+    }
+
+    pub fn write<T: protobuf::MessageFull>(&self, value: &T) -> String {
         let noun_name = name_value::<T>();
         let id = id_value(value);
         let schema = self.schemas.get(&noun_name);
         if let Some(sch) = schema {
             for index in sch.indexes.iter() {
                 let idx_db_name = self.schemas.db_name(&noun_name, &index.name);
-                let index_db = self
-                    .env
-                    .create_db(Some(&idx_db_name), lmdb::DatabaseFlags::empty())
-                    .unwrap();
+                let index_db = self.open_db(&idx_db_name);
                 let mut tx = self.env.begin_rw_txn().unwrap();
                 let key = index.get_key(value);
                 let result = tx.get(index_db, &key);
@@ -76,7 +84,7 @@ impl Db {
                             tx.put(index_db, &key, &id, lmdb::WriteFlags::empty())
                                 .unwrap()
                         }
-                        _ => ()
+                        _ => (),
                     },
                     Ok(v) => println!(
                         "exists: {} {:?}: {:?}",
@@ -89,6 +97,16 @@ impl Db {
                 self.dump(&idx_db_name);
             }
         }
+        id
+    }
+
+    pub fn get(&self, noun_name: String, index_name: String, key: String) -> String {
+        let idx_db_name = self.schemas.db_name(&noun_name, &index_name);
+        let index_db = self.open_db(&idx_db_name);
+        let tx = self.env.begin_ro_txn().unwrap();
+        let result = tx.get(index_db, &key);
+        let id = String::from_utf8_lossy(result.unwrap()).into_owned();
+        tx.commit().unwrap();
         id
     }
 
