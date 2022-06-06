@@ -12,13 +12,12 @@ pub struct Db {
     pub file_path: String,
 }
 
-pub fn open() -> Db {
+pub fn open(schema_file: String) -> Db {
     let data_dir = "lmdb-data";
     ensure_dir(data_dir).unwrap();
     let json_dir = "jsonlake";
     ensure_dir(json_dir).unwrap();
-    let schema_json = "schema.json";
-    let schemas = schema::from_file(schema_json);
+    let schemas = schema::from_file(&schema_file);
     let schemas_count: u32 = schemas.len().try_into().unwrap();
     let env = lmdb::Environment::new()
         .set_max_dbs(schemas_count + 1)
@@ -61,7 +60,7 @@ impl Db {
             .unwrap()
     }
 
-    pub fn write<T: protobuf::MessageFull>(&self, value: &T) -> String {
+    pub fn put<T: protobuf::MessageFull>(&self, value: &T) -> String {
         let noun_name = name_value::<T>();
         let id = id_value(value);
         let schema = self.schemas.get(&noun_name);
