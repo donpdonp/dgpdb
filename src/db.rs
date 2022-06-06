@@ -99,12 +99,15 @@ impl Db {
         id
     }
 
-    pub fn get(&self, noun_name: String, index_name: String, key: String) -> String {
+    pub fn get(&self, noun_name: String, index_name: String, key: String) -> Option<String> {
         let idx_db_name = self.schemas.db_name(&noun_name, &index_name);
         let index_db = self.open_db(&idx_db_name);
         let tx = self.env.begin_ro_txn().unwrap();
         let result = tx.get(index_db, &key);
-        let id = String::from_utf8_lossy(result.unwrap()).into_owned();
+        let id = match result {
+            Ok(result) => Some(String::from_utf8_lossy(result).into_owned()),
+            Err(_) => None,
+        };
         tx.commit().unwrap();
         id
     }
