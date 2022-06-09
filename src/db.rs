@@ -61,7 +61,7 @@ impl Db {
     }
 
     pub fn put<T: protobuf::MessageFull>(&self, value: &T) -> String {
-        let noun_name = name_value::<T>();
+        let noun_name = name_value::<T>().to_lowercase();
         let id = id_value(value);
         let schema = self.schemas.get(&noun_name);
         if let Some(sch) = schema {

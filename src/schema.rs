@@ -13,12 +13,12 @@ impl Schemas {
     pub fn len(&self) -> usize {
         self.schemas.len()
     }
-    pub fn get(&self, noun: &String) -> Option<&Schema> {
-        self.schemas.get(&noun.to_lowercase())
+    pub fn get(&self, noun: &str) -> Option<&Schema> {
+        self.schemas.get(noun)
     }
     pub fn db_name(&self, noun: &str, index_name: &str) -> String {
         if self.schemas.contains_key(noun) {
-            noun.to_lowercase() + "." + index_name
+            noun.to_owned() + "." + index_name
         } else {
             "error".to_owned()
         }
@@ -47,7 +47,7 @@ impl Index {
                 println!("index.get_key {} {}", descriptor, fv);
                 let value = match fv.get_singular(value){
                     Some(value) => value,
-                    None => return Err(format!("{} missing", fv.name()))
+                    None => return Err(format!("index.get_key {} missing", fv))
                 };
                 key_parts.push(value.to_str().unwrap().to_string());
             } else {
