@@ -75,26 +75,22 @@ impl Db {
                 let mut tx = self.env.begin_rw_txn().unwrap();
                 match index.get_key(value) {
                     Ok(key) => {
-                        let result = tx.get(index_db, &key);
-                        match result {
-                            Err(_) => match noun_name.as_str() {
-                                "location" => {
-                                    println!(
-                                        "writing {} key: {} value: {}",
-                                        idx_db_name,
-                                        String::from_utf8_lossy(&key),
-                                        id
-                                    );
-                                    tx.put(index_db, &key, &id, lmdb::WriteFlags::empty())
-                                        .unwrap()
-                                }
-                                _ => (),
-                            },
-                            Ok(v) => println!(
+                        match tx.get(index_db, &key) {
+                            Err(_) => {
+                                println!(
+                                    "writing {} key: {} value: {}",
+                                    idx_db_name,
+                                    String::from_utf8_lossy(&key),
+                                    id
+                                );
+                                tx.put(index_db, &key, &id, lmdb::WriteFlags::empty())
+                                    .unwrap()
+                            }
+                            Ok(value) => println!(
                                 "exists: {} {:?}: {:?}",
                                 idx_db_name,
                                 String::from_utf8_lossy(&key),
-                                String::from_utf8_lossy(v)
+                                String::from_utf8_lossy(value)
                             ),
                         }
                         tx.commit().unwrap();
