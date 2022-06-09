@@ -1,6 +1,9 @@
 pub mod db;
 pub mod schema;
 
+#[derive(Debug)]
+pub struct Error {}
+
 #[cfg(test)]
 mod tests {
     #[test]

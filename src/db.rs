@@ -49,8 +49,9 @@ pub fn id_value<T: protobuf::MessageFull>(value: &T) -> String {
         .to_string()
 }
 
+
 impl Db {
-    pub fn file_from_id(&self, id: &String) -> String {
+    pub fn filename_from_id(&self, id: &str) -> String {
         format!("{}/{}", self.file_path, id)
     }
 
@@ -99,14 +100,14 @@ impl Db {
         id
     }
 
-    pub fn get(&self, noun_name: String, index_name: String, key: String) -> Option<String> {
-        let idx_db_name = self.schemas.db_name(&noun_name, &index_name);
+    pub fn get(&self, noun_name: &str, index_name: &str, key: String) -> Result<String, crate::Error> {
+        let idx_db_name = self.schemas.db_name(noun_name, index_name);
         let index_db = self.open_db(&idx_db_name);
         let tx = self.env.begin_ro_txn().unwrap();
         let result = tx.get(index_db, &key);
         let id = match result {
-            Ok(result) => Some(String::from_utf8_lossy(result).into_owned()),
-            Err(_) => None,
+            Ok(result) => Ok(String::from_utf8_lossy(result).into_owned()),
+            Err(e) => Err(crate::Error {}),
         };
         tx.commit().unwrap();
         id

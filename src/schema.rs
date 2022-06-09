@@ -16,7 +16,7 @@ impl Schemas {
     pub fn get(&self, noun: &String) -> Option<&Schema> {
         self.schemas.get(noun)
     }
-    pub fn db_name(&self, noun: &String, index_name: &String) -> String {
+    pub fn db_name(&self, noun: &str, index_name: &str) -> String {
         if self.schemas.contains_key(noun) {
             noun.to_lowercase() + "." + index_name
         } else {
