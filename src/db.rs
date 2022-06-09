@@ -76,7 +76,7 @@ impl Db {
                     Err(_) => match noun_name.as_str() {
                         "location" => {
                             println!(
-                                "writing {} key:{} value: {}",
+                                "writing {} key: {} value: {}",
                                 idx_db_name,
                                 String::from_utf8_lossy(&key),
                                 id
