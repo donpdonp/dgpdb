@@ -69,31 +69,35 @@ impl Db {
                 let idx_db_name = self.schemas.db_name(&noun_name, &index.name);
                 let index_db = self.open_db(&idx_db_name);
                 let mut tx = self.env.begin_rw_txn().unwrap();
-                let key = index.get_key(value);
-                let result = tx.get(index_db, &key);
-                match result {
-                    Err(_) => match noun_name.as_str() {
-                        "location" => {
-                            println!(
-                                "writing {} key: {} value: {}",
+                match index.get_key(value) {
+                    Ok(key) => {
+                        let result = tx.get(index_db, &key);
+                        match result {
+                            Err(_) => match noun_name.as_str() {
+                                "location" => {
+                                    println!(
+                                        "writing {} key: {} value: {}",
+                                        idx_db_name,
+                                        String::from_utf8_lossy(&key),
+                                        id
+                                    );
+                                    tx.put(index_db, &key, &id, lmdb::WriteFlags::empty())
+                                        .unwrap()
+                                }
+                                _ => (),
+                            },
+                            Ok(v) => println!(
+                                "exists: {} {:?}: {:?}",
                                 idx_db_name,
                                 String::from_utf8_lossy(&key),
-                                id
-                            );
-                            tx.put(index_db, &key, &id, lmdb::WriteFlags::empty())
-                                .unwrap()
+                                String::from_utf8_lossy(v)
+                            ),
                         }
-                        _ => (),
-                    },
-                    Ok(v) => println!(
-                        "exists: {} {:?}: {:?}",
-                        idx_db_name,
-                        String::from_utf8_lossy(&key),
-                        String::from_utf8_lossy(v)
-                    ),
-                }
-                tx.commit().unwrap();
-                self.dump(&idx_db_name);
+                        tx.commit().unwrap();
+                        self.dump(&idx_db_name);
+                    }
+                    Err(msg) => println!("Warning missing {} ", msg),
+                };
             }
         } else {
             println!("warning: no schema for {}", noun_name);

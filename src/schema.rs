@@ -38,20 +38,24 @@ pub struct Index {
 }
 
 impl Index {
-    pub fn get_key<T: protobuf::MessageFull>(&self, value: &T) -> Vec<u8> {
+    pub fn get_key<T: protobuf::MessageFull>(&self, value: &T) -> Result<Vec<u8>, String> {
         println!("index.get_key value {}", value);
-        let mut key = Vec::<String>::new();
+        let mut key_parts = Vec::<String>::new();
         for field in &self.fields {
             let descriptor = T::descriptor();
             if let Some(fv) = descriptor.field_by_name(field) {
                 println!("index.get_key {} {}", descriptor, fv);
-                let value = fv.get_singular(value).unwrap();
-                key.push(value.to_str().unwrap().to_string());
+                let value = match fv.get_singular(value){
+                    Some(value) => value,
+                    None => return Err(format!("{} missing", fv.name()))
+                };
+                key_parts.push(value.to_str().unwrap().to_string());
             } else {
                 println!("warning: field {} is missing from {}", field, self.name)
             }
         }
-        return key.join(":").as_bytes().to_vec();
+        let key = key_parts.join(":");
+        return Ok(key.as_bytes().to_vec());
     }
 }
 
