@@ -51,7 +51,8 @@ impl Index {
                 };
                 key_parts.push(value.to_str().unwrap().to_string());
             } else {
-                println!("warning: field {} is missing from {}", field, self.name)
+                let value_name = T::descriptor().name().to_string();
+                println!("warning: index {} has field {} which is missing from {}", self.name, field, value_name)
             }
         }
         let key = key_parts.join(":");

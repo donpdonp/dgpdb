@@ -35,7 +35,7 @@ pub fn ensure_dir(dir: &str) -> Result<(), std::io::Error> {
 }
 
 pub fn name_value<T: protobuf::MessageFull>() -> String {
-    T::descriptor().name().to_string()
+    T::descriptor().name().to_string().to_lowercase()
 }
 
 pub fn id_value<T: protobuf::MessageFull>(value: &T) -> String {
@@ -96,7 +96,7 @@ impl Db {
                         tx.commit().unwrap();
                         self.dump(&idx_db_name);
                     }
-                    Err(msg) => println!("Warning missing {} ", msg),
+                    Err(msg) => println!("{}", msg),
                 };
             }
         } else {
