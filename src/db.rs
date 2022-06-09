@@ -107,7 +107,7 @@ impl Db {
         let result = tx.get(index_db, &key);
         let id = match result {
             Ok(result) => Ok(String::from_utf8_lossy(result).into_owned()),
-            Err(e) => Err(crate::Error {}),
+            Err(_) => Err(crate::Error {}),
         };
         tx.commit().unwrap();
         id
