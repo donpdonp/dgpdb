@@ -49,6 +49,10 @@ pub fn id_value<T: protobuf::MessageFull>(value: &T) -> String {
         .to_string()
 }
 
+pub fn id_new<T: protobuf::MessageFull>(value: &T) -> String {
+    ulid::Ulid::new().to_string()
+}
+
 impl Db {
     pub fn filename_from_id(&self, id: &str) -> String {
         format!("{}/{}", self.file_path, id)
