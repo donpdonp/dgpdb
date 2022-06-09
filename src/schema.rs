@@ -39,11 +39,12 @@ pub struct Index {
 
 impl Index {
     pub fn get_key<T: protobuf::MessageFull>(&self, value: &T) -> Vec<u8> {
-        // todo: key seperator
+        println!("index.get_key value {}", value);
         let mut key = Vec::<String>::new();
         for field in &self.fields {
             let descriptor = T::descriptor();
             if let Some(fv) = descriptor.field_by_name(field) {
+                println!("index.get_key {} {}", descriptor, fv);
                 let value = fv.get_singular(value).unwrap();
                 key.push(value.to_str().unwrap().to_string());
             } else {

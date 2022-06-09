@@ -49,7 +49,6 @@ pub fn id_value<T: protobuf::MessageFull>(value: &T) -> String {
         .to_string()
 }
 
-
 impl Db {
     pub fn filename_from_id(&self, id: &str) -> String {
         format!("{}/{}", self.file_path, id)
@@ -102,7 +101,12 @@ impl Db {
         id
     }
 
-    pub fn get(&self, noun_name: &str, index_name: &str, key: String) -> Result<String, crate::Error> {
+    pub fn get(
+        &self,
+        noun_name: &str,
+        index_name: &str,
+        key: String,
+    ) -> Result<String, crate::Error> {
         let idx_db_name = self.schemas.db_name(noun_name, index_name);
         let index_db = self.open_db(&idx_db_name);
         let tx = self.env.begin_ro_txn().unwrap();
