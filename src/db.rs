@@ -96,6 +96,8 @@ impl Db {
                 tx.commit().unwrap();
                 self.dump(&idx_db_name);
             }
+        } else {
+            println!("warning: no schema for {}", noun_name);
         }
         id
     }

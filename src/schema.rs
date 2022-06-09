@@ -40,15 +40,17 @@ pub struct Index {
 impl Index {
     pub fn get_key<T: protobuf::MessageFull>(&self, value: &T) -> Vec<u8> {
         // todo: key seperator
-        let mut key = String::new();
+        let mut key = Vec::<String>::new();
         for field in &self.fields {
-            if let Some(fv) = Some("field") {
-                key.push_str(fv)
+            let descriptor = T::descriptor();
+            if let Some(fv) = descriptor.field_by_name(field) {
+                let value = fv.get_singular(value).unwrap();
+                key.push(value.to_str().unwrap().to_string());
             } else {
                 println!("warning: field {} is missing from {}", field, self.name)
             }
         }
-        return key.as_bytes().to_vec();
+        return key.join(":").as_bytes().to_vec();
     }
 }
 
