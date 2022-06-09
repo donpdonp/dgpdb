@@ -37,6 +37,16 @@ pub struct Index {
     pub options: Options,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Options {
+    #[serde(default)]
+    multi: bool,
+    #[serde(default)]
+    unique: bool,
+    #[serde(default)]
+    lowercase: bool,
+}
+
 impl Index {
     pub fn get_key<T: protobuf::MessageFull>(&self, value: &T) -> Result<Vec<u8>, String> {
         let mut key_parts = Vec::<String>::new();
@@ -61,17 +71,15 @@ impl Index {
                 )
             }
         }
-        let key = key_parts.join(":");
+        let mut key = key_parts.join(":");
+        if self.options.lowercase {
+            key = key.to_lowercase();
+        }
         println!("index({}).get_key value {} => {}", self.name, value, key);
         return Ok(key.as_bytes().to_vec());
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Options {
-    #[serde(default)]
-    multi: bool,
-}
 pub fn from_file(filename: &str) -> Schemas {
     let file = File::open(filename).unwrap();
     let reader = BufReader::new(file);
