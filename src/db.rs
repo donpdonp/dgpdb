@@ -49,8 +49,14 @@ pub fn id_value<T: protobuf::MessageFull>(value: &T) -> String {
         .to_string()
 }
 
-pub fn id_new<T: protobuf::MessageFull>(value: &T) -> String {
-    ulid::Ulid::new().to_string()
+pub fn id_new<T: protobuf::MessageFull>(_value: &T) -> String {
+    let id = ulid::Ulid::new().to_string();
+    let noun_name_bytes = name_value::<T>().to_lowercase().into_bytes();
+    // 6 bytes time, 10 bytes rnd
+    let mut id_bytes = id.into_bytes();
+    id_bytes[6] = noun_name_bytes[0];
+    id_bytes[7] = noun_name_bytes[1];
+    String::from_utf8(id_bytes).unwrap()
 }
 
 impl Db {
